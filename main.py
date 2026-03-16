@@ -5,6 +5,19 @@ from openai import OpenAI
 import os
 import json
 import re
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Masked API Key for startup check
+nvidia_api_key = os.environ.get("NVIDIA_API_KEY")
+if nvidia_api_key:
+    masked_key = f"{nvidia_api_key[:4]}...{nvidia_api_key[-4:]}"
+    logger.info(f"NVIDIA_API_KEY is set: {masked_key}")
+else:
+    logger.warning("NVIDIA_API_KEY is NOT set. API calls will fail.")
 
 app = FastAPI()
 app.add_middleware(
@@ -78,6 +91,9 @@ class ScoreRequest(BaseModel):
 @app.post("/score-depin")
 async def score_project(req: ScoreRequest):
     try:
+        if not os.environ.get("NVIDIA_API_KEY"):
+            raise HTTPException(status_code=500, detail="NVIDIA_API_KEY not found in environment variables")
+            
         msg = client.chat.completions.create(
             model="nvidia/llama-3.1-nemotron-70b-instruct",
             max_tokens=1500,
@@ -94,13 +110,17 @@ async def score_project(req: ScoreRequest):
                 }
             ]
         )
+        content = msg.choices[0].message.content
+        logger.info(f"Raw API response: {content[:100]}...") # Log first 100 chars
+        
         raw = re.sub(
             r"```json|```", "",
-            msg.choices[0].message.content
+            content
         ).strip()
         return {"success": True, "data": json.loads(raw)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error in score_project: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"API Error: {str(e)}")
 
 
 @app.get("/health")
