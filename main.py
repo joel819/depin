@@ -95,7 +95,7 @@ async def score_project(req: ScoreRequest):
             raise HTTPException(status_code=500, detail="NVIDIA_API_KEY not found in environment variables")
             
         msg = client.chat.completions.create(
-            model="nvidia/llama-3.1-nemotron-70b-instruct",
+            model="meta/llama-3.1-70b-instruct",
             max_tokens=1500,
             messages=[
                 {"role": "system", "content": SYSTEM},
