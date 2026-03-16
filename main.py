@@ -123,6 +123,16 @@ async def score_project(req: ScoreRequest):
         raise HTTPException(status_code=500, detail=f"API Error: {str(e)}")
 
 
+@app.get("/models")
+async def list_models():
+    try:
+        models = client.models.list()
+        return {"success": True, "models": [m.id for m in models.data]}
+    except Exception as e:
+        logger.error(f"Error listing models: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
