@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 # Masked API Key for startup check
 nvidia_api_key = os.environ.get("NVIDIA_API_KEY")
 if nvidia_api_key:
-    masked_key = f"{nvidia_api_key[:4]}...{nvidia_api_key[-4:]}"
+    key_str = str(nvidia_api_key)
+    masked_key = f"{key_str[:4]}...{key_str[-4:]}"
     logger.info(f"NVIDIA_API_KEY is set: {masked_key}")
 else:
     logger.warning("NVIDIA_API_KEY is NOT set. API calls will fail.")
